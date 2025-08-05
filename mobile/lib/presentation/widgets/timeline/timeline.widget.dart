@@ -31,7 +31,7 @@ class Timeline extends StatelessWidget {
     super.key,
     this.topSliverWidget,
     this.topSliverWidgetHeight,
-    this.showStorageIndicator = false,
+    this.showStorageIndicator,
     this.withStack = false,
     this.appBar = const ImmichSliverAppBar(floating: true, pinned: false, snap: false),
     this.bottomSheet = const GeneralBottomSheet(),
@@ -40,7 +40,7 @@ class Timeline extends StatelessWidget {
 
   final Widget? topSliverWidget;
   final double? topSliverWidgetHeight;
-  final bool showStorageIndicator;
+  final bool? showStorageIndicator;
   final Widget? appBar;
   final Widget? bottomSheet;
   final bool withStack;
@@ -115,6 +115,8 @@ class _SliverTimelineState extends ConsumerState<_SliverTimeline> {
         _baseScaleFactor = _scaleFactor;
       });
     });
+
+    ref.listenManual(multiSelectProvider.select((s) => s.isEnabled), _onMultiSelectionToggled);
   }
 
   void _onEvent(Event event) {
@@ -128,6 +130,10 @@ class _SliverTimelineState extends ConsumerState<_SliverTimeline> {
       default:
         break;
     }
+  }
+
+  void _onMultiSelectionToggled(_, bool isEnabled) {
+    EventStream.shared.emit(MultiSelectToggleEvent(isEnabled));
   }
 
   @override

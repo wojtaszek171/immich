@@ -6,8 +6,8 @@ import 'package:immich_mobile/domain/models/album/album.model.dart';
 import 'package:immich_mobile/domain/models/asset/base_asset.model.dart';
 import 'package:immich_mobile/presentation/widgets/action_buttons/archive_action_button.widget.dart';
 import 'package:immich_mobile/presentation/widgets/action_buttons/delete_action_button.widget.dart';
-import 'package:immich_mobile/presentation/widgets/action_buttons/delete_permanent_action_button.widget.dart';
 import 'package:immich_mobile/presentation/widgets/action_buttons/delete_local_action_button.widget.dart';
+import 'package:immich_mobile/presentation/widgets/action_buttons/delete_permanent_action_button.widget.dart';
 import 'package:immich_mobile/presentation/widgets/action_buttons/download_action_button.widget.dart';
 import 'package:immich_mobile/presentation/widgets/action_buttons/edit_date_time_action_button.widget.dart';
 import 'package:immich_mobile/presentation/widgets/action_buttons/edit_location_action_button.widget.dart';
@@ -25,11 +25,30 @@ import 'package:immich_mobile/providers/server_info.provider.dart';
 import 'package:immich_mobile/providers/timeline/multiselect.provider.dart';
 import 'package:immich_mobile/widgets/common/immich_toast.dart';
 
-class GeneralBottomSheet extends ConsumerWidget {
-  const GeneralBottomSheet({super.key});
+class GeneralBottomSheet extends ConsumerStatefulWidget {
+  final double? minChildSize;
+  const GeneralBottomSheet({super.key, this.minChildSize});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<GeneralBottomSheet> createState() => _GeneralBottomSheetState();
+}
+
+class _GeneralBottomSheetState extends ConsumerState<GeneralBottomSheet> {
+  late DraggableScrollableController sheetController;
+  @override
+  void initState() {
+    super.initState();
+    sheetController = DraggableScrollableController();
+  }
+
+  @override
+  void dispose() {
+    sheetController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final multiselect = ref.watch(multiSelectProvider);
     final isTrashEnable = ref.watch(serverInfoProvider.select((state) => state.serverFeatures.trash));
 
@@ -58,8 +77,14 @@ class GeneralBottomSheet extends ConsumerWidget {
       ref.read(multiSelectProvider.notifier).reset();
     }
 
+    Future<void> onKeyboardExpand() {
+      return sheetController.animateTo(0.85, duration: const Duration(milliseconds: 200), curve: Curves.easeInOut);
+    }
+
     return BaseBottomSheet(
+      controller: sheetController,
       initialChildSize: 0.45,
+      minChildSize: widget.minChildSize,
       maxChildSize: 0.85,
       shouldCloseOnMinExtent: false,
       actions: [
@@ -88,7 +113,7 @@ class GeneralBottomSheet extends ConsumerWidget {
       ],
       slivers: [
         const AddToAlbumHeader(),
-        AlbumSelector(onAlbumSelected: addAssetsToAlbum),
+        AlbumSelector(onAlbumSelected: addAssetsToAlbum, onKeyboardExpanded: onKeyboardExpand),
       ],
     );
   }
